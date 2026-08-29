@@ -100,6 +100,40 @@ case "$BUMP" in
 esac
 
 TAG="v$NEW_VERSION"
+MINOR_TAG="${NEW_VERSION%.*}"
+
+read_first_pom_version() {
+  grep -m1 '<version>' "$1" | sed 's/.*<version>\(.*\)<\/version>.*/\1/' | tr -d ' '
+}
+
+replace_first_pom_version() {
+  local pom_path="$1"
+  local old_version="$2"
+  local new_version="$3"
+
+  POM_OLD_VERSION="$old_version" POM_NEW_VERSION="$new_version" \
+    perl -0pi -e 's{<version>\Q$ENV{POM_OLD_VERSION}\E</version>}{<version>$ENV{POM_NEW_VERSION}</version>}' "$pom_path"
+
+  local actual_version
+  actual_version=$(read_first_pom_version "$pom_path")
+  [ "$actual_version" = "$new_version" ] || \
+    error "更新失败: ${pom_path#$ROOT/} 仍为 $actual_version"
+}
+
+# 所有版本源必须一致，避免只更新子模块后才在 CI 中暴露父 POM 不可解析。
+CURRENT_CARGO_VERSION=$(sed -n 's/^version = "\([^"]*\)"/\1/p' "$CARGO_TOML" | head -1)
+[ "$CURRENT_CARGO_VERSION" = "$CURRENT_VERSION" ] || \
+  error "版本不一致: frontend/src-tauri/Cargo.toml=$CURRENT_CARGO_VERSION, frontend/package.json=$CURRENT_VERSION"
+
+CURRENT_POM_VERSION=$(read_first_pom_version "$PARENT_POM")
+[ "$CURRENT_POM_VERSION" = "$CURRENT_VERSION" ] || \
+  error "版本不一致: backend/pom.xml=$CURRENT_POM_VERSION, frontend/package.json=$CURRENT_VERSION"
+
+for pom in "${CHILD_POMS[@]}"; do
+  child_version=$(read_first_pom_version "$pom")
+  [ "$child_version" = "$CURRENT_VERSION" ] || \
+    error "版本不一致: ${pom#$ROOT/}=$child_version, frontend/package.json=$CURRENT_VERSION"
+done
 
 # ─── 前置检查 ───────────────────────────────────────────────
 # 检查是否有未提交的变更
@@ -165,19 +199,18 @@ sed -i '' "s/^version = \"$CURRENT_VERSION\"/version = \"$NEW_VERSION\"/" "$CARG
 ok "Cargo.toml → $NEW_VERSION"
 
 # ─── 更新 backend/pom.xml（parent） ─────────────────────────
-CURRENT_POM_VERSION=$(grep -m1 '<version>' "$PARENT_POM" | sed 's/.*<version>\(.*\)<\/version>.*/\1/' | tr -d ' ')
 info "更新 backend/pom.xml (parent: $CURRENT_POM_VERSION → $NEW_VERSION) ..."
 
 # 替换 parent pom 自身版本（第一个 <version>）
-sed -i '' "0,/<version>$CURRENT_POM_VERSION<\/version>/s/<version>$CURRENT_POM_VERSION<\/version>/<version>$NEW_VERSION<\/version>/" "$PARENT_POM"
+replace_first_pom_version "$PARENT_POM" "$CURRENT_POM_VERSION" "$NEW_VERSION"
 ok "backend/pom.xml → $NEW_VERSION"
 
 # ─── 更新子模块 pom.xml 中的 parent version ──────────────────
 for pom in "${CHILD_POMS[@]}"; do
   module_name="${pom#$ROOT/}"
   info "更新 $module_name ..."
-  # 精准替换 <parent> 块内的 <version>
-  sed -i '' "/<parent>/,/<\/parent>/s/<version>$CURRENT_POM_VERSION<\/version>/<version>$NEW_VERSION<\/version>/" "$pom"
+  # 子模块的第一个 <version> 即 <parent> 块内版本
+  replace_first_pom_version "$pom" "$CURRENT_POM_VERSION" "$NEW_VERSION"
   ok "$module_name → $NEW_VERSION"
 done
 
@@ -218,7 +251,7 @@ else
   echo ""
   echo -e "${GREEN}GitHub Actions 将自动构建 Docker 镜像:${NC}"
   echo -e "  ghcr.io/kiwi233333/jiwu-chat-core:$NEW_VERSION"
-  echo -e "  ghcr.io/kiwi233333/jiwu-chat-core:latest"
+  echo -e "  ghcr.io/kiwi233333/jiwu-chat-core:$MINOR_TAG"
 fi
 
 # ─── 可选：打发布整合包 ─────────────────────────────────────
