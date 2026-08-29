@@ -1,15 +1,20 @@
-# RabbitMQ 3.13 并启用延迟消息插件（x-delayed-message），供 OSS 延迟删除等使用
+# RabbitMQ 3.13.7 并启用延迟消息插件 3.13.0（x-delayed-message），供 OSS 延迟删除等使用
 # 构建时传入 DOCKER_REGISTRY 可走镜像加速，如 docker.1ms.run
-ARG DOCKER_REGISTRY=docker.1ms.run
-FROM ${DOCKER_REGISTRY}/library/rabbitmq:3.13-management
+ARG DOCKER_REGISTRY=docker.io
+ARG RABBITMQ_VERSION=3.13.7
+FROM ${DOCKER_REGISTRY}/library/rabbitmq:${RABBITMQ_VERSION}-management
 
 RUN apt-get update && apt-get install -y --no-install-recommends curl ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
+# 官方插件 v3.13.0，与 RabbitMQ 3.13.x 对应
 ARG PLUGIN_VERSION=3.13.0
+ARG PLUGIN_SHA256=3479180df03fa830fd59ccf638a60eee8f0e8261524a8616685522d7b8d9a9ee
 ARG PLUGIN_URL=https://github.com/rabbitmq/rabbitmq-delayed-message-exchange/releases/download/v${PLUGIN_VERSION}/rabbitmq_delayed_message_exchange-${PLUGIN_VERSION}.ez
 
 RUN set -eux; \
-    curl -fSL -o "$RABBITMQ_HOME/plugins/rabbitmq_delayed_message_exchange-${PLUGIN_VERSION}.ez" "$PLUGIN_URL"; \
-    chown rabbitmq:rabbitmq "$RABBITMQ_HOME/plugins/rabbitmq_delayed_message_exchange-${PLUGIN_VERSION}.ez"; \
+    plugin_path="$RABBITMQ_HOME/plugins/rabbitmq_delayed_message_exchange-${PLUGIN_VERSION}.ez"; \
+    curl -fSL -o "$plugin_path" "$PLUGIN_URL"; \
+    echo "${PLUGIN_SHA256}  ${plugin_path}" | sha256sum -c -; \
+    chown rabbitmq:rabbitmq "$plugin_path"; \
     rabbitmq-plugins enable rabbitmq_delayed_message_exchange --offline

@@ -27,7 +27,7 @@ rm -rf "$OUT"
 mkdir -p "$OUT/$NAME"
 
 echo ">>> 同步 deploy 内容并确保 initdb.d、docker 最新..."
-cp -r "$DEPLOY"/docker-compose.yml "$DEPLOY"/.env.example "$DEPLOY"/start.sh "$DEPLOY"/README.md "$OUT/$NAME/"
+cp -r "$DEPLOY"/docker-compose.yml "$DEPLOY"/.dockerignore "$DEPLOY"/.env.example "$DEPLOY"/start.sh "$DEPLOY"/README.md "$OUT/$NAME/"
 mkdir -p "$OUT/$NAME/initdb.d" "$OUT/$NAME/docker"
 cp "$ROOT/backend/docker-entrypoint-initdb.d/jiwu-chat-db.sql" "$OUT/$NAME/initdb.d/"
 cp "$ROOT/docker/Dockerfile.rabbitmq" "$OUT/$NAME/docker/"

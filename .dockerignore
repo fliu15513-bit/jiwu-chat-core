@@ -1,0 +1,50 @@
+# Deny by default. The root build context is shared by docker/Dockerfile and
+# docker/Dockerfile.rabbitmq, so new top-level files never enter an image unless
+# a Dockerfile explicitly needs them and this allowlist is updated.
+**
+
+!backend/
+!backend/**
+!frontend/
+!frontend/**
+!docker/
+!docker/Dockerfile
+!docker/Dockerfile.rabbitmq
+!docker/entrypoint.sh
+!docker/serve-with-config.js
+
+# Generated dependencies, compiler output, caches, reports, and local tooling.
+**/.git/
+**/.idea/
+**/.vscode/
+**/.cursor/
+**/.github/
+**/node_modules/
+**/.pnpm-store/
+**/.npm/
+**/.yarn/
+**/.nuxt/
+**/.nitro/
+**/.output/
+**/.cache/
+**/.turbo/
+**/coverage/
+**/test-results/
+**/playwright-report/
+**/dist/
+**/target/
+**/logs/
+**/*.log
+**/*.tsbuildinfo
+**/.DS_Store
+
+# The combined image builds only the Nuxt web target, not Tauri desktop assets.
+frontend/src-tauri/
+frontend/.doc/
+frontend/.dev/
+frontend/report.html
+
+# Do not send developer-local environment files or credentials from any allowed
+# tree. The tracked production defaults are the only dotenv build input.
+**/.env*
+!frontend/.env.production

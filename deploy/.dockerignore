@@ -1,0 +1,6 @@
+# The deploy image only downloads the delayed-message plugin. No release files,
+# database seed data, or local environment files are build inputs.
+**
+
+!docker/
+!docker/Dockerfile.rabbitmq

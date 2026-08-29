@@ -145,15 +145,15 @@ docker push registry.cn-hangzhou.aliyuncs.com/你的命名空间/jiwu-chat:v1.0.
 
    ```bash
    docker compose build rabbitmq
-   docker tag jiwu-rabbitmq:latest ghcr.io/YOUR_USERNAME/jiwu-rabbitmq:latest
-   docker push ghcr.io/YOUR_USERNAME/jiwu-rabbitmq:latest
+   docker tag jiwu-rabbitmq:3.13.7-delayed-3.13.0 ghcr.io/YOUR_USERNAME/jiwu-rabbitmq:3.13.7-delayed-3.13.0
+   docker push ghcr.io/YOUR_USERNAME/jiwu-rabbitmq:3.13.7-delayed-3.13.0
    ```
 
 2. 修改 **deploy/docker-compose.yml** 中 `rabbitmq` 服务：去掉 `build` 块，改为使用你的镜像，例如：
 
    ```yaml
    rabbitmq:
-     image: ghcr.io/YOUR_USERNAME/jiwu-rabbitmq:latest
+     image: ghcr.io/YOUR_USERNAME/jiwu-rabbitmq:3.13.7-delayed-3.13.0
      # 删除 build: ... 整块
      container_name: jiwu-rabbitmq
      ...

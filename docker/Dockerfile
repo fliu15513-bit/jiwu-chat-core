@@ -11,7 +11,8 @@ RUN cd backend && mvn clean package -DskipTests -pl jiwu-chat-starter -am -q
 # 阶段二：前端 SSG（pnpm build:nuxt → .output/public）
 # 构建时使用固定占位默认值；实际 API 地址在部署时由 serve-with-config.js 通过环境变量注入
 FROM ${DOCKER_REGISTRY}/library/node:22-alpine AS frontend
-RUN corepack enable && corepack prepare pnpm@latest --activate
+ARG PNPM_VERSION=10.13.1
+RUN corepack enable && corepack prepare pnpm@${PNPM_VERSION} --activate
 WORKDIR /app
 COPY frontend/ frontend/
 WORKDIR /app/frontend
@@ -22,7 +23,7 @@ ENV NUXT_PUBLIC_NODE_ENV=production
 ENV NUXT_PUBLIC_SPA=false
 ENV SKIP_CHECK_ENV=true
 ENV CI=true
-RUN pnpm install --frozen-lockfile || pnpm install
+RUN pnpm install --frozen-lockfile
 RUN pnpm run build:nuxt
 
 # 阶段三：运行（Node 跑 npx serve + JRE 跑 jar）

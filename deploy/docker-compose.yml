@@ -43,7 +43,7 @@ services:
       dockerfile: docker/Dockerfile.rabbitmq
       args:
         DOCKER_REGISTRY: ${DOCKER_REGISTRY:-docker.io}
-    image: jiwu-rabbitmq:latest
+    image: jiwu-rabbitmq:3.13.7-delayed-3.13.0
     container_name: jiwu-rabbitmq
     hostname: jiwu-rabbitmq
     environment:
@@ -52,7 +52,7 @@ services:
     volumes:
       - rabbitmq-data:/var/lib/rabbitmq
     healthcheck:
-      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      test: ["CMD-SHELL", "rabbitmq-diagnostics -q ping && rabbitmq-plugins list -e -m | grep -qx rabbitmq_delayed_message_exchange"]
       interval: 10s
       timeout: 5s
       retries: 5

@@ -41,10 +41,11 @@ JIWU_CHAT_IMAGE=ghcr.io/KiWi233333/jiwu-chat:v1.0.0
 发布包内容：
 
 - `docker-compose.yml`（jiwu-chat 仅拉取单镜像；MySQL/Redis 拉取官方镜像；RabbitMQ 需本地构建一次，见下）
+- `.dockerignore`（RabbitMQ 构建只发送 Dockerfile，不上传发布包、数据库脚本或本地环境文件）
 - `.env.example`（含本次发布的镜像地址）
 - `start.sh`、`README.md`
 - `initdb.d/jiwu-chat-db.sql`
-- `docker/Dockerfile.rabbitmq`（首次 `docker compose up -d` 时会构建 RabbitMQ 镜像，之后复用）
+- `docker/Dockerfile.rabbitmq`（首次 `docker compose up -d` 时会基于官方 RabbitMQ 3.13.7 构建并启用 delayed-message 插件 3.13.0，之后复用）
 
 ## 发布给用户
 

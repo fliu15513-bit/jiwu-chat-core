@@ -167,6 +167,7 @@ docker compose up -d
 ```
 
 - 应用端口 9090、WebSocket 9091 已映射；MySQL/Redis/RabbitMQ 在 `docker-compose.yml` 中配置。
+- RabbitMQ 使用官方 `3.13.7-management` 镜像构建，并启用 `rabbitmq_delayed_message_exchange` 3.13.0；不再依赖仅支持 AMD64 的第三方延迟队列镜像。
 - **生产环境务必修改默认密码**（如 `MYSQL_ROOT_PASSWORD`、`SPRING_DATASOURCE_PASSWORD` 等）。
 
 ### Nginx 反向代理

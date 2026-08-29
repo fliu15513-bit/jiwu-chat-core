@@ -50,7 +50,7 @@ docker compose up -d --build
 |--------|------|----------|
 | jiwu-mysql | MySQL 8.0，库 `jiwu-chat-db` | 仅内网（3306） |
 | jiwu-redis | Redis 6.2 | 仅内网（6379） |
-| jiwu-rabbitmq | RabbitMQ 3.13 | 仅内网（5672/15672） |
+| jiwu-rabbitmq | RabbitMQ 3.13.7 + delayed-message 插件 3.13.0 | 仅内网（5672/15672） |
 | jiwu-chat | 前后端单包（Node 静态服务 + Spring Boot API + WebSocket，前端 API 地址由环境变量在部署时注入） | 3000（前端）、9090（HTTP）、9091（WS） |
 
 数据库与中间件不对外暴露端口，仅应用对外。

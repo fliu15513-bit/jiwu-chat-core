@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # Java应用服务
   jiwu-chat-api:
@@ -50,7 +48,12 @@ services:
 
   # RabbitMQ服务（带延迟队列插件）
   rabbitmq:
-    image: everacostaqrvey/rabbitmq-delayed:3.13.17-3.13.0-3
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.rabbitmq
+      args:
+        DOCKER_REGISTRY: ${DOCKER_REGISTRY:-docker.io}
+    image: jiwu-rabbitmq:3.13.7-delayed-3.13.0
     container_name: jiwu-rabbitmq
     hostname: my-rabbit
 #    ports:
@@ -61,6 +64,11 @@ services:
       - RABBITMQ_DEFAULT_PASS=password
     volumes:
       - rabbitmq-data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD-SHELL", "rabbitmq-diagnostics -q ping && rabbitmq-plugins list -e -m | grep -qx rabbitmq_delayed_message_exchange"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     restart: always
     networks:
       - jiwu-network
