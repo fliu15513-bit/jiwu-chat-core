@@ -11,6 +11,8 @@
 
 维护者打发布包：在根目录执行 `./scripts/pack-docker-release.sh [版本号]`，产出 `dist-docker/jiwu-chat-core-<版本>.zip`；发布前需先构建并推送镜像，并更新 `deploy/.env.example` 中的 `JIWU_CHAT_IMAGE`。**如何构建并发布自己的完整镜像**（Docker Hub / GHCR / 自建仓库）见 [deploy/BUILD-IMAGE.md](deploy/BUILD-IMAGE.md)；发布流程概览见 [deploy/RELEASE.md](deploy/RELEASE.md)。
 
+正式版本使用 `./scripts/release.sh patch|minor|major` 发布。版本 tag 默认同时更新 GHCR 的 `latest` 标签；如本次版本不应成为默认版本，可加 `--no-latest`。手动运行 Docker 工作流时也可通过 `update_latest` 参数控制，默认开启。
+
 ## 前置要求
 
 - [Docker](https://docs.docker.com/get-docker/) 与 [Docker Compose](https://docs.docker.com/compose/install/)（或 Docker Desktop 自带 Compose）

@@ -12,6 +12,7 @@
 #   ./scripts/release.sh patch --dry-run  # 预览变更，不实际修改
 #   ./scripts/release.sh patch --no-push  # 只提交和打 tag，不推送
 #   ./scripts/release.sh patch --pack     # 发布后自动打发布整合包 zip
+#   ./scripts/release.sh patch --no-latest # 本次发布不更新 latest（默认更新）
 # ============================================================
 set -euo pipefail
 
@@ -36,14 +37,16 @@ BUMP=""
 DRY_RUN=false
 NO_PUSH=false
 PACK=false
+UPDATE_LATEST=true
 
 for arg in "$@"; do
   case "$arg" in
     --dry-run)  DRY_RUN=true ;;
     --no-push)  NO_PUSH=true ;;
     --pack)     PACK=true ;;
+    --no-latest) UPDATE_LATEST=false ;;
     --help|-h)
-      echo "用法: $0 <patch|minor|major|x.y.z> [--dry-run] [--no-push] [--pack]"
+      echo "用法: $0 <patch|minor|major|x.y.z> [--dry-run] [--no-push] [--pack] [--no-latest]"
       echo ""
       echo "选项:"
       echo "  patch|minor|major   按语义化版本递增"
@@ -51,6 +54,7 @@ for arg in "$@"; do
       echo "  --dry-run          预览变更，不实际修改任何文件"
       echo "  --no-push          提交并打 tag，但不推送到远程"
       echo "  --pack             发布后自动运行 pack-docker-release.sh 打发布整合包"
+      echo "  --no-latest        不更新 latest 镜像标签（默认更新）"
       exit 0
       ;;
     -*)
@@ -159,6 +163,11 @@ echo ""
 echo -e "  当前版本:  ${RED}$CURRENT_VERSION${NC}"
 echo -e "  新版本:    ${GREEN}$NEW_VERSION${NC}"
 echo -e "  Git Tag:   ${CYAN}$TAG${NC}"
+if $UPDATE_LATEST; then
+  echo -e "  latest:    ${GREEN}更新（默认）${NC}"
+else
+  echo -e "  latest:    ${YELLOW}不更新${NC}"
+fi
 echo ""
 echo -e "${BOLD}  将更新以下文件:${NC}"
 echo -e "  ${CYAN}前端:${NC}"
@@ -236,7 +245,9 @@ EOF
 ok "已提交: chore(release): 发布 v$NEW_VERSION"
 
 info "创建 Tag: $TAG ..."
-git tag -a "$TAG" -m "Release $NEW_VERSION"
+git tag -a "$TAG" \
+  -m "Release $NEW_VERSION" \
+  -m "Update-Latest: $UPDATE_LATEST"
 ok "已创建 Tag: $TAG"
 
 # ─── 推送 ───────────────────────────────────────────────────
@@ -252,6 +263,9 @@ else
   echo -e "${GREEN}GitHub Actions 将自动构建 Docker 镜像:${NC}"
   echo -e "  ghcr.io/kiwi233333/jiwu-chat-core:$NEW_VERSION"
   echo -e "  ghcr.io/kiwi233333/jiwu-chat-core:$MINOR_TAG"
+  if $UPDATE_LATEST; then
+    echo -e "  ghcr.io/kiwi233333/jiwu-chat-core:latest"
+  fi
 fi
 
 # ─── 可选：打发布整合包 ─────────────────────────────────────

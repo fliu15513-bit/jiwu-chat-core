@@ -60,7 +60,7 @@ JIWU_CHAT_IMAGE=ghcr.io/KiWi233333/jiwu-chat:v1.0.0
 
 可在 GitHub Actions 中：
 
-1. 在 tag 推送时构建 `jiwu-chat` 并推送到 GHCR。
+1. 在 tag 推送时构建 `jiwu-chat` 并推送到 GHCR；默认让版本标签与 `latest` 指向同一组多架构 manifests，发布时传 `--no-latest` 可跳过。
 2. 将 `deploy/` 目录与 `scripts/pack-docker-release.sh` 产出物打 zip，上传为 Release 附件。
 
 这样每次发布新版本时，用户都能拿到「解压即用」的 Docker 整合包。

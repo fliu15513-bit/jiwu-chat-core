@@ -4,6 +4,12 @@ on:
   push:
     tags: ['v*']
   workflow_dispatch:
+    inputs:
+      update_latest:
+        description: 同时更新 latest 标签
+        required: false
+        type: boolean
+        default: true
 
 env:
   REGISTRY: ghcr.io
@@ -82,6 +88,11 @@ jobs:
       packages: write
 
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
       - name: Download all digests
         uses: actions/download-artifact@v4
         with:
@@ -96,6 +107,26 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Resolve latest policy
+        id: latest-policy
+        shell: bash
+        env:
+          DISPATCH_UPDATE_LATEST: ${{ inputs.update_latest }}
+        run: |
+          update_latest=true
+
+          if [[ "$GITHUB_EVENT_NAME" == "workflow_dispatch" ]]; then
+            update_latest="${DISPATCH_UPDATE_LATEST:-true}"
+          elif [[ "$GITHUB_REF_TYPE" == "tag" ]]; then
+            tag_message=$(git for-each-ref --format='%(contents)' "refs/tags/$GITHUB_REF_NAME")
+            if grep -Fqx 'Update-Latest: false' <<< "$tag_message"; then
+              update_latest=false
+            fi
+          fi
+
+          echo "update_latest=$update_latest" >> "$GITHUB_OUTPUT"
+          echo "Update latest: $update_latest"
+
       - name: Extract Docker metadata
         id: meta
         uses: docker/metadata-action@v5
@@ -105,7 +136,7 @@ jobs:
             type=ref,event=branch
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
-            type=raw,value=latest,enable={{is_default_branch}}
+            type=raw,value=latest,enable=${{ steps.latest-policy.outputs.update_latest }}
 
       - name: Create and push manifest list
         working-directory: /tmp/digests
